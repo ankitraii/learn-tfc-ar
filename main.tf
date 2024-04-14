@@ -38,14 +38,14 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
-  public_key = file("${path.module}/key.pub")
+  public_key = var.pub_ssh_key
 }
 
 resource "aws_instance" "example" {
   ami                    = data.aws_ami.ubuntu.id
   key_name               = aws_key_pair.deployer.key_name
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.sg_ssh.id]
+  vpc_security_group_ids = [aws_security_group.sg_ssh.id,aws_security_group.sg_web]
   user_data              = <<-EOF
               #!/bin/bash
               apt-get update
@@ -65,6 +65,23 @@ resource "aws_security_group" "sg_web" {
   ingress {
     from_port   = "8080"
     to_port     = "8080"
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  // connectivity to ubuntu mirrors is required to run `apt-get update` and `apt-get install apache2`
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "sg_ssh" {
+  name = "sg_ssh"
+  ingress {
+    from_port   = "22"
+    to_port     = "22"
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
