@@ -45,7 +45,7 @@ resource "aws_instance" "example" {
   ami                    = data.aws_ami.ubuntu.id
   key_name               = aws_key_pair.deployer.key_name
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.sg_ssh.id,aws_security_group.sg_web]
+  vpc_security_group_ids = [aws_security_group.sg_ssh.id,aws_security_group.sg_web.id]
   user_data              = <<-EOF
               #!/bin/bash
               apt-get update
